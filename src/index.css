@@ -1,0 +1,14 @@
+*{
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  font-family: "Playfair Display", serif;
+}
+
+body {
+  height: 100vh;
+  background-image: url('./assets/home.png');
+  background-size: 100vw 100%; /* Full width and height */
+  background-position: center;
+  background-repeat: no-repeat;
+}
