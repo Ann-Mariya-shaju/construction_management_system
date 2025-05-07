@@ -9,7 +9,7 @@ function RoleSelection() {
     <div className="bg-white p-4 rounded shadow" style={{ width: '100%', maxWidth: '400px'}}>
       <h4 className="text-center mb-4">Select Your Role</h4>
       <button className="btn btn-primary w-100 mb-3" onClick={() => navigate("/login", { state: { role: 'user' } })}>Login as User</button>
-      <button className="btn btn-secondary w-100" onClick={() => navigate("/login", { state: { role: 'contractor' } })}>Login as Contractor/Engineer</button>
+      <button className="btn btn-secondary w-100" onClick={() => navigate("/login", { state: { role: 'contractor' } })}>Login as Contractorr</button>
     </div>
     </div>
   );

@@ -13,22 +13,22 @@ function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // 1) Admin login check
+    if (credentials.email === "admin@gmail.com" && credentials.password === "admin123") {
+      navigate('/admin-dashboard');
+      return;
+    }
+
+    // 2) Contractor / User
     if (state?.role === 'contractor') {
       navigate('/contractor-form');
     } else if (state?.role === 'user') {
       navigate('/user-dashboard');
     } else {
-      navigate('/role-selection'); // fallback
+      // fallback if somehow no role
+      navigate('/role-selection');
     }
-
-
-      
-      // if (credentials.email === "admin@gmail.com" && credentials.password === "admin123") {
-      //   navigate('/admin-dashboard');
-      // } else {
-      //   navigate('/role-selection');
-      // }
-    
   };
 
   return (
