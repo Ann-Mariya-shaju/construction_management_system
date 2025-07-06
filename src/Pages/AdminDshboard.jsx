@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FaHome, FaUserTie, FaClipboardList, FaSignOutAlt, FaCheck, FaTimes, FaTrash } from 'react-icons/fa';
+import { FaHome, FaUserTie, FaClipboardList, FaSignOutAlt, FaCheck, FaTimes, FaTrash, FaEnvelope, FaPhone, FaCalendarAlt, FaMoneyBillWave, FaRulerCombined } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
@@ -10,6 +10,23 @@ export default function AdminDashboard() {
   const [userRequests, setUserRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('contractors');
+
+  // Enhanced color scheme
+  const colors = {
+    primary: '#2C3E50',         // Dark blue
+    secondary: '#3498DB',       // Bright blue
+    accent: '#E74C3C',         // Red
+    success: '#27AE60',        // Green
+    warning: '#F39C12',        // Orange
+    info: '#2980B9',           // Blue
+    light: '#ECF0F1',          // Light gray
+    dark: '#2C3E50',           // Dark blue
+    background: '#F5F7FA',     // Very light gray
+    text: '#34495E',           // Dark gray-blue
+    white: '#FFFFFF',
+    paleGreen: '#E8F8F5',      // Very pale green
+    paleBlue: '#EBF5FB'        // Very pale blue
+  };
 
   useEffect(() => {
     // Load contractors data from localStorage
@@ -119,9 +136,15 @@ export default function AdminDashboard() {
   };
 
   const getStatusColor = (status) => {
-    if (status === 'approved') return 'green';
-    if (status === 'rejected') return 'red';
-    return 'orange';
+    if (status === 'approved') return colors.success;
+    if (status === 'rejected') return colors.accent;
+    return colors.warning;
+  };
+
+  const getStatusIcon = (status) => {
+    if (status === 'approved') return <FaCheck style={{ marginRight: 5 }} />;
+    if (status === 'rejected') return <FaTimes style={{ marginRight: 5 }} />;
+    return null;
   };
 
   const handleLogout = () => {
@@ -130,316 +153,498 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '20px' }}>Loading...</div>;
+    return (
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '20px', 
+        backgroundColor: colors.background, 
+        height: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        fontSize: '18px',
+        color: colors.text
+      }}>
+        Loading Dashboard...
+      </div>
+    );
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: colors.background }}>
       {/* Sidebar */}
       <div style={{
-        width: '250px',
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        color: 'white',
-        paddingTop: '20px',
+        width: '280px',
+        backgroundColor: colors.primary,
+        color: colors.white,
+        paddingTop: '30px',
         position: 'fixed',
         height: '100vh',
         overflowY: 'auto',
-        boxShadow: '2px 0 10px rgba(0, 0, 0, 0.3)',
+        boxShadow: '2px 0 15px rgba(0, 0, 0, 0.1)',
         zIndex: 10
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h3 style={{ color: '#ffc107', margin: '0' }}>SJS Builders</h3>
-          <p style={{ color: '#999', fontSize: '0.8rem', marginTop: '5px' }}>Admin Panel</p>
+        <div style={{ textAlign: 'center', marginBottom: '40px', padding: '0 20px' }}>
+          <h2 style={{ 
+            color: colors.white, 
+            margin: '0',
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            letterSpacing: '0.5px'
+          }}>SJS Builders</h2>
+          <p style={{ 
+            color: colors.light, 
+            fontSize: '0.85rem', 
+            marginTop: '8px',
+            opacity: 0.8
+          }}>Admin Dashboard</p>
         </div>
 
-        <div style={{ padding: '0 15px' }}>
+        <div style={{ padding: '0 20px' }}>
           <NavItem 
-            icon={<FaHome />} 
+            icon={<FaHome style={{ fontSize: '1.1rem' }} />} 
             text="Dashboard" 
             active={true} 
             onClick={() => {}}
+            colors={colors}
           />
           
           <NavItem 
-            icon={<FaUserTie />} 
+            icon={<FaUserTie style={{ fontSize: '1.1rem' }} />} 
             text="Contractors" 
             active={activeTab === 'contractors'} 
             onClick={() => setActiveTab('contractors')}
+            colors={colors}
           />
           
           <NavItem 
-            icon={<FaClipboardList />} 
+            icon={<FaClipboardList style={{ fontSize: '1.1rem' }} />} 
             text="User Requests" 
             active={activeTab === 'userRequests'} 
             onClick={() => setActiveTab('userRequests')}
+            colors={colors}
           />
           
-          <div style={{ borderTop: '1px solid #555', margin: '20px 0' }}></div>
+          <div style={{ 
+            borderTop: `1px solid rgba(255,255,255,0.1)`, 
+            margin: '25px 0',
+            opacity: 0.5
+          }}></div>
           
           <NavItem 
-            icon={<FaSignOutAlt />} 
+            icon={<FaSignOutAlt style={{ fontSize: '1.1rem' }} />} 
             text="Logout" 
             onClick={handleLogout}
+            colors={colors}
           />
         </div>
       </div>
 
-      {/* Main Content Area with fixed background and scrolling */}
+      {/* Main Content Area */}
       <div style={{ 
-        marginLeft: '250px', 
+        marginLeft: '280px', 
         flexGrow: 1,
-        backgroundImage: `url('./assets/home.png')`, // Replace with correct image path
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed', // This ensures the background stays fixed when scrolling
+        backgroundColor: colors.background,
         minHeight: '100vh',
-        padding: '20px',
-        overflowY: 'auto' // Enable scrolling in the content area
+        padding: '30px',
+        overflowY: 'auto',
       }}>
-        <ToastContainer position="top-right" autoClose={2000} hideProgressBar />
+        <ToastContainer 
+          position="top-right" 
+          autoClose={2000} 
+          hideProgressBar 
+          toastStyle={{ 
+            backgroundColor: colors.white,
+            color: colors.text,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}
+        />
         
         {/* Content Header */}
         <div style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+          backgroundColor: colors.white,
           borderRadius: '10px',
-          padding: '20px', 
-          marginBottom: '20px',
+          padding: '25px', 
+          marginBottom: '30px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+          borderLeft: `5px solid ${colors.secondary}`
         }}>
-          <h2 style={{ color: 'white', margin: '0' }}>
-            {activeTab === 'contractors' ? 'Contractor Management' : 'User Request Management'}
-          </h2>
-          <span style={{ color: '#ffc107', fontSize: '0.9rem' }}>
-            {new Date().toLocaleString()}
-          </span>
+          <div>
+            <h2 style={{ 
+              color: colors.primary, 
+              margin: '0',
+              fontSize: '1.5rem',
+              fontWeight: '600'
+            }}>
+              {activeTab === 'contractors' ? 'Contractor Management' : 'User Request Management'}
+            </h2>
+            <p style={{ 
+              color: colors.text, 
+              fontSize: '0.9rem', 
+              marginTop: '5px',
+              opacity: 0.8
+            }}>
+              {activeTab === 'contractors' 
+                ? 'Review and manage contractor submissions' 
+                : 'Manage user construction requests'}
+            </p>
+          </div>
+          <div style={{ 
+            backgroundColor: colors.paleBlue, 
+            padding: '10px 15px',
+            borderRadius: '30px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <FaCalendarAlt style={{ color: colors.info }} />
+            <span style={{ 
+              color: colors.text,
+              fontSize: '0.9rem',
+              fontWeight: '500'
+            }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
         </div>
         
         {/* Conditional Content Based on Active Tab */}
         {activeTab === 'contractors' ? (
           <div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ 
+                color: colors.text,
+                margin: 0,
+                fontWeight: '500'
+              }}>
+                Contractor Submissions ({contractors.length})
+              </h3>
+            </div>
+
             {contractors.length === 0 ? (
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', borderRadius: '10px', padding: '20px', textAlign: 'center' }}>
-                <p style={{ color: 'white' }}>No contractor submissions yet.</p>
+              <div style={{ 
+                backgroundColor: colors.white, 
+                borderRadius: '10px', 
+                padding: '40px 20px', 
+                textAlign: 'center',
+                boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+                marginBottom: '30px'
+              }}>
+                <p style={{ 
+                  color: colors.text,
+                  fontSize: '1rem',
+                  opacity: 0.7
+                }}>
+                  No contractor submissions yet. Check back later.
+                </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-                {contractors.map((c, idx) => (
-                  <div key={idx} style={{
-                    border: '1px solid #333',
-                    borderRadius: '10px',
-                    padding: '20px',
-                    width: '300px',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    backdropFilter: 'blur(5px)', // Add blur effect for all cards
-                    color: 'white',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between'
-                  }}>
-                    <div>
-                      <h3 style={{ marginBottom: '10px' }}>{c.name}</h3>
-                      <p><strong>Email:</strong> {c.email}</p>
-                      <p><strong>Previous Works:</strong> {c.previousWorks}</p>
-                      <p><strong>Cost/sqft:</strong> ₹{c.cost}</p>
-                      <p><strong>Completion Time:</strong> {c.time} days</p>
-                      <p><strong>Status:</strong> 
-                        <span style={{
-                          marginLeft: '10px',
-                          padding: '5px 10px',
-                          borderRadius: '20px',
-                          backgroundColor: getStatusColor(c.status),
-                          color: 'white',
-                          fontSize: '12px'
-                        }}>
-                          {c.status ? c.status.toUpperCase() : 'PENDING'}
-                        </span>
-                      </p>
-                    </div>
-
-                    <div>
-                      {c.imageUrls && Array.isArray(c.imageUrls) && c.imageUrls.map((img, index) => (
-                        <img 
-                          key={index} 
-                          src={img} 
-                          alt="Work" 
-                          style={{ 
-                            width: '100%', 
-                            marginBottom: '5px', 
-                            borderRadius: '5px', 
-                            maxHeight: '100px', 
-                            objectFit: 'cover' 
-                          }} 
-                        />
-                      ))}
-
-                      {/* Always show approve/reject buttons regardless of status */}
-                      <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                        <button 
-                          style={{ 
-                            backgroundColor: 'green', 
-                            color: 'white', 
-                            border: 'none', 
-                            padding: '5px 10px', 
-                            borderRadius: '5px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px' 
-                          }}
-                          onClick={() => updateContractorStatus(c.id, 'approved')}>
-                          <FaCheck /> Approve
-                        </button>
-                        <button 
-                          style={{ 
-                            backgroundColor: 'red', 
-                            color: 'white', 
-                            border: 'none', 
-                            padding: '5px 10px', 
-                            borderRadius: '5px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px'
-                          }}
-                          onClick={() => updateContractorStatus(c.id, 'rejected')}>
-                          <FaTimes /> Reject
-                        </button>
-                      </div>
-
-                      <button 
-                        style={{ 
-                          backgroundColor: '#555', 
-                          color: 'white', 
-                          border: 'none', 
-                          padding: '5px 10px', 
-                          borderRadius: '5px', 
-                          marginTop: '10px', 
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '5px'
-                        }}
-                        onClick={() => deleteContractor(c.id)}>
-                        <FaTrash /> Delete Contractor
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div style={{
+                backgroundColor: colors.white,
+                borderRadius: '10px',
+                padding: '20px',
+                boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+                overflowX: 'auto'
+              }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse'
+                }}>
+                  <thead>
+                    <tr style={{
+                      backgroundColor: colors.primary,
+                      color: colors.white
+                    }}>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Name</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Email</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Phone</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Cost/Sqft</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Completion Time</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Status</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contractors.map((contractor, index) => (
+                      <tr key={index} style={{
+                        borderBottom: `1px solid ${colors.light}`,
+                        ':hover': {
+                          backgroundColor: colors.paleBlue
+                        }
+                      }}>
+                        <td style={{ padding: '12px 15px' }}>{contractor.name}</td>
+                        <td style={{ padding: '12px 15px' }}>{contractor.email}</td>
+                        <td style={{ padding: '12px 15px' }}>{contractor.phone || 'N/A'}</td>
+                        <td style={{ padding: '12px 15px' }}>₹{contractor.cost}</td>
+                        <td style={{ padding: '12px 15px' }}>{contractor.time} days</td>
+                        <td style={{ padding: '12px 15px' }}>
+                          <span style={{
+                            padding: '5px 10px',
+                            borderRadius: '20px',
+                            backgroundColor: getStatusColor(contractor.status),
+                            color: colors.white,
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            display: 'inline-flex',
+                            alignItems: 'center'
+                          }}>
+                            {getStatusIcon(contractor.status)}
+                            {contractor.status ? contractor.status.toUpperCase() : 'PENDING'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 15px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                            <button
+                              style={{
+                                backgroundColor: colors.success,
+                                color: colors.white,
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => updateContractorStatus(contractor.id, 'approved')}
+                            >
+                              <FaCheck size={12} /> Approve
+                            </button>
+                            <button
+                              style={{
+                                backgroundColor: colors.accent,
+                                color: colors.white,
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => updateContractorStatus(contractor.id, 'rejected')}
+                            >
+                              <FaTimes size={12} /> Reject
+                            </button>
+                            <button
+                              style={{
+                                backgroundColor: 'transparent',
+                                color: colors.accent,
+                                border: `1px solid ${colors.accent}`,
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => deleteContractor(contractor.id)}
+                            >
+                              <FaTrash size={12} /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
         ) : (
           <div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ 
+                color: colors.text,
+                margin: 0,
+                fontWeight: '500'
+              }}>
+                User Requests ({userRequests.length})
+              </h3>
+            </div>
+
             {userRequests.length === 0 ? (
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', borderRadius: '10px', padding: '20px', textAlign: 'center' }}>
-                <p style={{ color: 'white' }}>No user requests yet.</p>
+              <div style={{ 
+                backgroundColor: colors.white, 
+                borderRadius: '10px', 
+                padding: '40px 20px', 
+                textAlign: 'center',
+                boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+                marginBottom: '30px'
+              }}>
+                <p style={{ 
+                  color: colors.text,
+                  fontSize: '1rem',
+                  opacity: 0.7
+                }}>
+                  No user requests yet. When users submit requests, they'll appear here.
+                </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-                {userRequests.map((request, idx) => (
-                  <div key={idx} style={{
-                    border: '1px solid #333',
-                    borderRadius: '10px',
-                    padding: '20px',
-                    width: '350px',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Make slightly more transparent
-                    backdropFilter: 'blur(5px)', // Add blur effect
-                    color: 'white',
-                  }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px',
-                      borderBottom: '1px solid #555',
-                      paddingBottom: '10px'
+              <div style={{
+                backgroundColor: colors.white,
+                borderRadius: '10px',
+                padding: '20px',
+                boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+                overflowX: 'auto'
+              }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse'
+                }}>
+                  <thead>
+                    <tr style={{
+                      backgroundColor: colors.primary,
+                      color: colors.white
                     }}>
-                      <h3 style={{ margin: '0' }}>
-                        {request.type === 'custom' ? request.projectTitle : `Contractor Request`}
-                      </h3>
-                      <span style={{
-                        padding: '5px 10px',
-                        borderRadius: '20px',
-                        backgroundColor: getStatusColor(request.status),
-                        color: 'white',
-                        fontSize: '12px'
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Request Type</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Details</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Budget</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Timeframe</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Date</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left' }}>Status</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userRequests.map((request, index) => (
+                      <tr key={index} style={{
+                        borderBottom: `1px solid ${colors.light}`,
+                        ':hover': {
+                          backgroundColor: colors.paleBlue
+                        }
                       }}>
-                        {request.status ? request.status.toUpperCase() : 'PENDING'}
-                      </span>
-                    </div>
-
-                    {request.type === 'custom' ? (
-                      <div>
-                        <p><strong>Project:</strong> {request.projectTitle}</p>
-                        <p><strong>Square Feet:</strong> {request.squareFeet} sq.ft</p>
-                        <p><strong>Budget:</strong> ₹{request.budget}</p>
-                        <p><strong>Completion Period:</strong> {request.completionPeriod} days</p>
-                        <p><strong>Description:</strong> {request.description}</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p><strong>Contractor Name:</strong> {request.name}</p>
-                        <p><strong>Cost/sqft:</strong> ₹{request.cost}</p>
-                        <p><strong>Completion Time:</strong> {request.time} days</p>
-                      </div>
-                    )}
-                    
-                    <p><strong>Request Date:</strong> {new Date(request.requestDate).toLocaleDateString()}</p>
-
-                    {/* Always show approve/reject buttons regardless of status */}
-                    <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
-                      <button 
-                        style={{ 
-                          backgroundColor: 'green', 
-                          color: 'white', 
-                          border: 'none', 
-                          padding: '8px 15px', 
-                          borderRadius: '5px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                        onClick={() => updateRequestStatus(request.id, 'approved')}>
-                        <FaCheck /> Approve
-                      </button>
-                      <button 
-                        style={{ 
-                          backgroundColor: 'red', 
-                          color: 'white', 
-                          border: 'none', 
-                          padding: '8px 15px', 
-                          borderRadius: '5px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                        onClick={() => updateRequestStatus(request.id, 'rejected')}>
-                        <FaTimes /> Reject
-                      </button>
-                    </div>
-
-                    <button 
-                      style={{ 
-                        backgroundColor: '#555', 
-                        color: 'white', 
-                        border: 'none', 
-                        padding: '8px 15px', 
-                        borderRadius: '5px', 
-                        marginTop: '10px', 
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '5px'
-                      }}
-                      onClick={() => deleteRequest(request.id)}>
-                      <FaTrash /> Delete Request
-                    </button>
-                  </div>
-                ))}
+                        <td style={{ padding: '12px 15px' }}>
+                          {request.type === 'custom' ? 'Custom Project' : 'Contractor Request'}
+                          {request.type === 'custom' && (
+                            <div style={{ fontSize: '0.8rem', color: colors.text, marginTop: '4px' }}>
+                              {request.projectTitle}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 15px' }}>
+                          {request.type === 'custom' ? (
+                            <div style={{ maxWidth: '300px', whiteSpace: 'pre-line' }}>
+                              {request.description}
+                            </div>
+                          ) : (
+                            <div>
+                              <div>Contractor: {request.name}</div>
+                              <div>Cost: ₹{request.cost}/sqft</div>
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 15px' }}>
+                          {request.type === 'custom' ? (
+                            `₹${request.budget}`
+                          ) : (
+                            `₹${request.cost}/sqft`
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 15px' }}>
+                          {request.type === 'custom' ? (
+                            `${request.completionPeriod} days`
+                          ) : (
+                            `${request.time} days`
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 15px' }}>
+                          {new Date(request.requestDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </td>
+                        <td style={{ padding: '12px 15px' }}>
+                          <span style={{
+                            padding: '5px 10px',
+                            borderRadius: '20px',
+                            backgroundColor: getStatusColor(request.status),
+                            color: colors.white,
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            display: 'inline-flex',
+                            alignItems: 'center'
+                          }}>
+                            {getStatusIcon(request.status)}
+                            {request.status ? request.status.toUpperCase() : 'PENDING'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 15px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                            <button
+                              style={{
+                                backgroundColor: colors.success,
+                                color: colors.white,
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => updateRequestStatus(request.id, 'approved')}
+                            >
+                              <FaCheck size={12} /> Approve
+                            </button>
+                            <button
+                              style={{
+                                backgroundColor: colors.accent,
+                                color: colors.white,
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => updateRequestStatus(request.id, 'rejected')}
+                            >
+                              <FaTimes size={12} /> Reject
+                            </button>
+                            <button
+                              style={{
+                                backgroundColor: 'transparent',
+                                color: colors.accent,
+                                border: `1px solid ${colors.accent}`,
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '0.8rem'
+                              }}
+                              onClick={() => deleteRequest(request.id)}
+                            >
+                              <FaTrash size={12} /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -450,7 +655,7 @@ export default function AdminDashboard() {
 }
 
 // Navigation Item Component
-const NavItem = ({ icon, text, active = false, onClick }) => {
+const NavItem = ({ icon, text, active = false, onClick, colors }) => {
   return (
     <div 
       onClick={onClick}
@@ -459,21 +664,37 @@ const NavItem = ({ icon, text, active = false, onClick }) => {
         alignItems: 'center',
         padding: '12px 15px',
         cursor: 'pointer',
-        backgroundColor: active ? 'rgba(255, 193, 7, 0.2)' : 'transparent',
-        color: active ? '#ffc107' : 'white',
-        borderRadius: '5px',
+        backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'transparent',
+        color: active ? colors.white : 'rgba(255,255,255,0.8)',
+        borderRadius: '6px',
         marginBottom: '5px',
         transition: 'all 0.2s ease',
-      }}
-      onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-      }}
-      onMouseLeave={(e) => {
-        if (!active) e.currentTarget.style.backgroundColor = 'transparent';
+        fontWeight: active ? '500' : '400',
+        ':hover': {
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          color: colors.white
+        }
       }}
     >
-      <span style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>{icon}</span>
-      <span>{text}</span>
+      <span style={{ 
+        marginRight: '12px', 
+        display: 'flex', 
+        alignItems: 'center',
+        fontSize: '1rem',
+        opacity: active ? 1 : 0.8
+      }}>
+        {icon}
+      </span>
+      <span style={{ fontSize: '0.95rem' }}>{text}</span>
+      {active && (
+        <div style={{ 
+          marginLeft: 'auto',
+          width: '4px',
+          height: '20px',
+          backgroundColor: colors.secondary,
+          borderRadius: '2px'
+        }}></div>
+      )}
     </div>
   );
 };

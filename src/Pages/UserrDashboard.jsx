@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Button, Badge, Spinner, Modal, Form, FloatingLabel, Container, Nav } from 'react-bootstrap';
+import { Card, Row, Col, Button, Badge, Spinner, Modal, Form, FloatingLabel } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaStar, FaRegStar, FaBuilding, FaHardHat, FaClipboardList, FaUserClock, FaHome, FaSignOutAlt } from 'react-icons/fa';
-import bg from '../assets/home.png'; // Make sure this path is correct
+import { FaPlus, FaStar, FaRegStar, FaBuilding, FaHardHat, FaClipboardList, FaUserClock, FaHome, FaSignOutAlt, FaEnvelope, FaPhone, FaCalendarAlt, FaMoneyBillWave, FaRulerCombined } from 'react-icons/fa';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -10,11 +11,28 @@ const UserDashboard = () => {
   const [requestedWorks, setRequestedWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('contractors');
-  const [userName, setUserName] = useState('John Doe'); // Replace with actual user data
+  const [userName, setUserName] = useState('John Doe');
   const [showModal, setShowModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedContractor, setSelectedContractor] = useState(null);
   
+  // Updated color scheme with #D0B8A8 and #DFD3C3
+  const colors = {
+    primary: '#D0B8A8',         // Primary color (peach)
+    secondary: '#DFD3C3',       // Secondary color (light beige)
+    accent: '#A45C40',         // Darker peach for contrast
+    success: '#5C8D89',        // Muted teal
+    warning: '#E4A444',        // Gold
+    info: '#7D9D9C',           // Dusty teal
+    light: '#F8EDE3',          // Very light peach
+    dark: '#6B4F4F',           // Dark brown
+    background: '#F9F5F0',     // Off-white with peach tint
+    text: '#5E4A4A',           // Dark brown-gray
+    white: '#FFFFFF',
+    paleGreen: '#E8F8F5',      // Very pale green
+    paleBlue: '#EBF5FB'        // Very pale blue
+  };
+
   // Form states
   const [requestForm, setRequestForm] = useState({
     projectTitle: '',
@@ -50,6 +68,7 @@ const UserDashboard = () => {
         setApprovedContractors(contractorsWithReviews);
       } catch (error) {
         console.error("Error loading contractor data:", error);
+        toast.error("Error loading contractor data");
       }
     };
 
@@ -61,6 +80,7 @@ const UserDashboard = () => {
         setRequestedWorks(parsedRequests);
       } catch (error) {
         console.error("Error loading requested works:", error);
+        toast.error("Error loading requested works");
       } finally {
         setLoading(false);
       }
@@ -93,31 +113,28 @@ const UserDashboard = () => {
     }));
   };
 
-  const handleRequestSubmit = (e) => {
-    e.preventDefault();
-    
-    try {
-      const newCustomRequest = {
-        id: Date.now().toString(),
-        projectTitle: requestForm.projectTitle,
-        squareFeet: requestForm.squareFeet,
-        budget: requestForm.budget,
-        completionPeriod: requestForm.completionPeriod,
-        description: requestForm.description,
-        status: 'pending',
-        requestDate: new Date().toISOString(),
-        type: 'custom'
-      };
+ const handleRequestSubmit = async (e) => {
+  e.preventDefault();
 
-      // Store in localStorage
-      const existingRequests = JSON.parse(localStorage.getItem('requestedWorks') || '[]');
-      existingRequests.push(newCustomRequest);
-      localStorage.setItem('requestedWorks', JSON.stringify(existingRequests));
+  const newRequest = {
+    email: "user@gmail.com", // TODO: Replace with logged-in user's email if using auth
+    projectTitle: requestForm.projectTitle,
+    squareFeet: requestForm.squareFeet,
+    budget: requestForm.budget,
+    completionPeriod: requestForm.completionPeriod,
+    description: requestForm.description
+  };
 
-      // Update state
-      setRequestedWorks([...requestedWorks, newCustomRequest]);
-      
-      // Reset form and close modal
+  try {
+    const response = await fetch("http://localhost:4005/request/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newRequest)
+    });
+
+    if (response.status === 201) {
+      toast.success('Your custom request has been submitted successfully!');
+
       setRequestForm({
         projectTitle: '',
         squareFeet: '',
@@ -126,21 +143,21 @@ const UserDashboard = () => {
         description: ''
       });
       setShowModal(false);
-      
-      // Show success message
-      alert('Your custom request has been submitted successfully!');
-      
-    } catch (error) {
-      console.error("Error submitting request:", error);
-      alert("Failed to submit request. Please try again.");
+    } else {
+      const msg = await response.text();
+      toast.error(`Submission failed: ${msg}`);
     }
-  };
+  } catch (err) {
+    console.error("Error submitting request:", err);
+    toast.error("Failed to submit request. Please try again.");
+  }
+};
   
   const handleReviewSubmit = (e) => {
     e.preventDefault();
     
     if (!selectedContractor || !reviewForm.rating) {
-      alert("Please select a rating before submitting.");
+      toast.warning("Please select a rating before submitting.");
       return;
     }
     
@@ -194,16 +211,15 @@ const UserDashboard = () => {
       setSelectedContractor(null);
       
       // Show success message
-      alert('Your review has been submitted successfully!');
+      toast.success('Your review has been submitted successfully!');
       
     } catch (error) {
       console.error("Error submitting review:", error);
-      alert("Failed to submit review. Please try again.");
+      toast.error("Failed to submit review. Please try again.");
     }
   };
 
   const handleRequestContractor = (contractor) => {
-    // Add the contractor request to localStorage
     try {
       const newRequest = {
         requestId: Date.now().toString(),
@@ -223,11 +239,11 @@ const UserDashboard = () => {
       // Update the local state
       setRequestedWorks([...requestedWorks, newRequest]);
       
-      // Show alert
-      alert(`Requested contractor: ${contractor.name}`);
+      // Show success message
+      toast.success(`Requested contractor: ${contractor.name}`);
     } catch (error) {
       console.error("Error adding request:", error);
-      alert("Failed to request contractor");
+      toast.error("Failed to request contractor");
     }
   };
   
@@ -246,7 +262,7 @@ const UserDashboard = () => {
           <span 
             key={i} 
             onClick={() => onRatingChange(i)} 
-            style={{ cursor: 'pointer', color: i <= rating ? '#ffc107' : '#e4e5e9', marginRight: '2px', fontSize: '24px' }}
+            style={{ cursor: 'pointer', color: i <= rating ? colors.warning : colors.light, marginRight: '2px', fontSize: '24px' }}
           >
             {i <= rating ? <FaStar /> : <FaRegStar />}
           </span>
@@ -255,7 +271,7 @@ const UserDashboard = () => {
         stars.push(
           <span 
             key={i} 
-            style={{ color: i <= rating ? '#ffc107' : '#e4e5e9', marginRight: '2px' }}
+            style={{ color: i <= rating ? colors.warning : colors.light, marginRight: '2px' }}
           >
             {i <= rating ? <FaStar /> : <FaRegStar />}
           </span>
@@ -266,344 +282,493 @@ const UserDashboard = () => {
     return <div>{stars}</div>;
   };
 
+  const getStatusColor = (status) => {
+    if (status === 'approved') return colors.success;
+    if (status === 'rejected') return colors.accent;
+    return colors.warning;
+  };
+
+  const handleLogout = () => {
+    navigate('/');
+    toast.info('Logged out successfully');
+  };
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '20px', 
+        backgroundColor: colors.background, 
+        height: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        fontSize: '18px',
+        color: colors.text
+      }}>
         <Spinner animation="border" variant="warning" />
       </div>
     );
   }
 
   return (
-    <div 
-      style={{ 
-        backgroundImage: `url(${bg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        minHeight: '100vh',
-        display: 'flex'
-      }}
-    >
-      {/* Side Navigation Bar */}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: colors.background }}>
+      {/* Side Navigation Bar - Fixed scrolling issue */}
       <div style={{
         width: '280px',
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        padding: '20px 0',
-        boxShadow: '5px 0 15px rgba(0, 0, 0, 0.3)',
-        display: 'flex',
-        flexDirection: 'column',
+        backgroundColor: colors.primary,
+        color: colors.dark,
+        position: 'fixed',
         height: '100vh',
-        position: 'sticky',
-        top: 0
+        boxShadow: '2px 0 15px rgba(0, 0, 0, 0.1)',
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         {/* User Profile Section */}
         <div style={{
           padding: '20px',
           textAlign: 'center',
-          borderBottom: '1px solid rgba(255, 193, 7, 0.2)',
-          marginBottom: '20px'
+          borderBottom: `1px solid rgba(0, 0, 0, 0.1)`,
+          flexShrink: 0
         }}>
           <div style={{
             width: '80px',
             height: '80px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
             margin: '0 auto 15px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '30px',
-            color: '#ffc107'
+            color: colors.dark,
+            border: `2px solid ${colors.dark}`
           }}>
             {userName.charAt(0)}
           </div>
-          <h5 style={{ color: 'white', marginBottom: '5px' }}>{userName}</h5>
-          <p style={{ color: '#ffc107', fontSize: '0.9rem' }}>Construction Portal</p>
+          <h5 style={{ color: colors.dark, marginBottom: '5px', fontWeight: '600' }}>{userName}</h5>
+          <p style={{ color: colors.accent, fontSize: '0.9rem', fontWeight: '500' }}>Construction Portal</p>
         </div>
 
-        {/* Navigation Links */}
-        <Nav variant="pills" className="flex-column" activeKey={activeTab}>
-          <Nav.Item style={{ marginBottom: '5px' }}>
-            <Nav.Link 
-              eventKey="contractors" 
-              onClick={() => setActiveTab('contractors')}
-              style={{
-                color: activeTab === 'contractors' ? 'black' : 'white',
-                backgroundColor: activeTab === 'contractors' ? '#ffc107' : 'transparent',
-                borderRadius: '0',
-                padding: '12px 25px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontWeight: '500'
-              }}
-            >
-              <FaHardHat /> Contractors
-            </Nav.Link>
-          </Nav.Item>
-          <Nav.Item style={{ marginBottom: '5px' }}>
-            <Nav.Link 
-              eventKey="requests" 
-              onClick={() => setActiveTab('requests')}
-              style={{
-                color: activeTab === 'requests' ? 'black' : 'white',
-                backgroundColor: activeTab === 'requests' ? '#ffc107' : 'transparent',
-                borderRadius: '0',
-                padding: '12px 25px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontWeight: '500'
-              }}
-            >
-              <FaClipboardList /> My Requests
-            </Nav.Link>
-          </Nav.Item>
-        </Nav>
-
-        {/* Bottom Logout Button */}
-        <div style={{ marginTop: 'auto', padding: '20px' }}>
-          <Button 
-            variant="outline-warning" 
-            className="w-100 d-flex align-items-center justify-content-center gap-2"
-            onClick={() => navigate('/role-selection')}
+        {/* Logout Button - Moved up */}
+        <div style={{ 
+          padding: '20px',
+          flexShrink: 0,
+          borderBottom: `1px solid rgba(0, 0, 0, 0.1)`
+        }}>
+          <button 
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: colors.accent,
+              color: colors.white,
+              border: 'none',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              fontWeight: '500',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#8C3D20';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = colors.accent;
+              e.target.style.transform = 'translateY(0)';
+            }}
           >
-            <FaSignOutAlt /> Logout
-          </Button>
+            <FaSignOutAlt style={{ fontSize: '1.1rem' }} /> Logout
+          </button>
+        </div>
+
+        {/* Scrollable Navigation Links Container */}
+        <div style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          padding: '20px'
+        }}>
+          <NavItem 
+            icon={<FaHardHat style={{ fontSize: '1.1rem' }} />} 
+            text="Contractors" 
+            active={activeTab === 'contractors'} 
+            onClick={() => setActiveTab('contractors')}
+            colors={colors}
+          />
+          
+          <NavItem 
+            icon={<FaClipboardList style={{ fontSize: '1.1rem' }} />} 
+            text="My Requests" 
+            active={activeTab === 'requests'} 
+            onClick={() => setActiveTab('requests')}
+            colors={colors}
+          />
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+      <div style={{ 
+        marginLeft: '280px', 
+        flexGrow: 1,
+        backgroundColor: colors.background,
+        minHeight: '100vh',
+        padding: '30px',
+        overflowY: 'auto',
+      }}>
+        <ToastContainer 
+          position="top-right" 
+          autoClose={2000} 
+          hideProgressBar 
+          toastStyle={{ 
+            backgroundColor: colors.white,
+            color: colors.text,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}
+        />
+        
         {/* Header */}
         <div style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.85)', 
-          borderRadius: '15px', 
-          padding: '20px',
+          backgroundColor: colors.white,
+          borderRadius: '10px',
+          padding: '25px', 
           marginBottom: '30px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+          borderLeft: `5px solid ${colors.primary}`
         }}>
-          <h2 style={{ color: 'white', margin: 0 }}>
-            {activeTab === 'contractors' ? (
-              <>
-                <FaHardHat className="me-2" /> Available Contractors
-              </>
-            ) : (
-              <>
-                <FaClipboardList className="me-2" /> My Requests
-              </>
-            )}
-          </h2>
+          <div>
+            <h2 style={{ 
+              color: colors.dark, 
+              margin: 0,
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              {activeTab === 'contractors' ? (
+                <>
+                  <FaHardHat /> Available Contractors
+                </>
+              ) : (
+                <>
+                  <FaClipboardList /> My Requests
+                </>
+              )}
+            </h2>
+          </div>
           
           {activeTab === 'contractors' && (
-            <Button 
-              variant="warning" 
-              className="d-flex align-items-center gap-2"
+            <button 
               onClick={() => setShowModal(true)}
+              style={{
+                backgroundColor: colors.primary,
+                color: colors.white,
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.backgroundColor = '#C0A898';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = colors.primary;
+                e.target.style.transform = 'translateY(0)';
+              }}
             >
               <FaPlus /> New Request
-            </Button>
+            </button>
           )}
         </div>
 
         {/* Content */}
         <div style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.85)', 
-          borderRadius: '15px', 
+          backgroundColor: colors.white, 
+          borderRadius: '10px', 
           padding: '25px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
           minHeight: '60vh'
         }}>
-          {activeTab === 'contractors' && (
+          {activeTab === 'contractors' ? (
             <>
               {approvedContractors.length === 0 ? (
-                <div className="text-center py-5">
-                  <p style={{ color: 'white', fontSize: '1.1rem' }}>No approved contractors available at the moment.</p>
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '40px 20px',
+                  backgroundColor: colors.light,
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ 
+                    color: colors.text,
+                    fontSize: '1.1rem',
+                    opacity: 0.8
+                  }}>
+                    No approved contractors available at the moment.
+                  </p>
                 </div>
               ) : (
-                <Row>
-                  {approvedContractors.map((contractor, idx) => (
-                    <Col key={idx} lg={4} md={6} className="mb-4">
-                      <Card style={{ 
-                        height: '100%', 
-                        backgroundColor: 'rgba(40, 40, 40, 0.95)', 
-                        color: 'white',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        boxShadow: '0 5px 15px rgba(0, 0, 0, 0.4)',
-                        border: '1px solid rgba(255, 193, 7, 0.3)',
-                        transition: 'transform 0.3s, box-shadow 0.3s',
-                      }} className="contractor-card">
-                        {contractor.imageUrls && contractor.imageUrls.length > 0 ? (
-                          <div style={{ position: 'relative', height: '200px' }}>
-                            <Card.Img 
-                              variant="top" 
-                              src={contractor.imageUrls[0]} 
-                              style={{ height: '100%', objectFit: 'cover' }} 
-                            />
-                            <div style={{ 
-                              position: 'absolute', 
-                              top: '15px', 
-                              right: '15px',
-                              backgroundColor: 'rgba(0,0,0,0.7)',
-                              borderRadius: '5px',
-                              padding: '5px 10px'
-                            }}>
-                              <Badge bg="warning" text="dark">₹{contractor.cost}/sqft</Badge>
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ 
-                            height: '180px', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(255, 193, 7, 0.1)'
-                          }}>
-                            <FaBuilding size={60} color="#ffc107" />
-                          </div>
-                        )}
-                        
-                        <Card.Body className="d-flex flex-column">
-                          <Card.Title style={{ fontSize: '1.3rem', fontWeight: '600' }}>
-                            {contractor.name}
-                          </Card.Title>
-                          
-                          <div className="mb-2">
+                <div style={{
+                  backgroundColor: colors.white,
+                  borderRadius: '10px',
+                  padding: '20px',
+                  boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+                  overflowX: 'auto'
+                }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse'
+                  }}>
+                    <thead>
+                      <tr style={{
+                        backgroundColor: colors.primary,
+                        color: colors.dark
+                      }}>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Contractor</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Rating</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Cost/Sqft</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Completion Time</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Previous Works</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {approvedContractors.map((contractor, index) => (
+                        <tr key={index} style={{
+                          borderBottom: `1px solid ${colors.secondary}`,
+                          ':hover': {
+                            backgroundColor: colors.light
+                          }
+                        }}>
+                          <td style={{ padding: '12px 15px' }}>
+                            <div style={{ fontWeight: '600' }}>{contractor.name}</div>
+                            <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{contractor.email}</div>
+                            {contractor.phone && (
+                              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                                <FaPhone style={{ marginRight: '5px' }} />
+                                {contractor.phone}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>
                             <StarRating rating={Math.round(contractor.avgRating || 0)} />
-                            <span className="ms-2 text-muted">
+                            <div style={{ fontSize: '0.8rem', marginTop: '5px' }}>
                               ({contractor.reviews?.length || 0} reviews)
-                            </span>
-                          </div>
-                          
-                          <Card.Text style={{ flex: 1 }}>
-                            <div className="mb-2">
-                              <span style={{ color: '#aaa' }}>Previous Works:</span><br />
-                              <span>{contractor.previousWorks}</span>
                             </div>
-                            <div className="d-flex align-items-center mb-2">
-                              <FaUserClock className="me-2" color="#ffc107" />
-                              <span>Completes in {contractor.time} days</span>
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>₹{contractor.cost}</td>
+                          <td style={{ padding: '12px 15px' }}>{contractor.time} days</td>
+                          <td style={{ padding: '12px 15px', maxWidth: '300px' }}>
+                            <div style={{ 
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: '100%'
+                            }}>
+                              {contractor.previousWorks}
                             </div>
-                          </Card.Text>
-                          
-                          <div className="d-flex gap-2 mt-3">
-                            <Button 
-                              variant="warning" 
-                              className="flex-grow-1"
-                              onClick={() => handleRequestContractor(contractor)}
-                            >
-                              Request
-                            </Button>
-                            <Button 
-                              variant="outline-light" 
-                              className="flex-grow-1"
-                              onClick={() => openReviewModal(contractor)}
-                            >
-                              Review
-                            </Button>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
+                          </td>
+                          <td style={{ padding: '12px 15px', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                              <button
+                                style={{
+                                  backgroundColor: colors.success,
+                                  color: colors.white,
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  fontSize: '0.8rem'
+                                }}
+                                onClick={() => handleRequestContractor(contractor)}
+                              >
+                                Request
+                              </button>
+                              <button
+                                style={{
+                                  backgroundColor: colors.warning,
+                                  color: colors.white,
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  fontSize: '0.8rem'
+                                }}
+                                onClick={() => openReviewModal(contractor)}
+                              >
+                                Review
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </>
-          )}
-
-          {activeTab === 'requests' && (
+          ) : (
             <>
               {requestedWorks.length === 0 ? (
-                <div className="text-center py-5">
-                  <p style={{ color: 'white', fontSize: '1.1rem' }}>You haven't made any requests yet.</p>
-                  <Button 
-                    variant="warning" 
-                    size="lg"
-                    className="mt-3"
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '40px 20px',
+                  backgroundColor: colors.light,
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ 
+                    color: colors.text,
+                    fontSize: '1.1rem',
+                    marginBottom: '20px',
+                    opacity: 0.8
+                  }}>
+                    You haven't made any requests yet.
+                  </p>
+                  <button 
                     onClick={() => setShowModal(true)}
+                    style={{
+                      backgroundColor: colors.primary,
+                      color: colors.white,
+                      border: 'none',
+                      padding: '12px 25px',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      margin: '0 auto',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.backgroundColor = '#C0A898';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.backgroundColor = colors.primary;
+                      e.target.style.transform = 'translateY(0)';
+                    }}
                   >
-                    <FaPlus className="me-2" /> Create New Request
-                  </Button>
+                    <FaPlus /> Create New Request
+                  </button>
                 </div>
               ) : (
-                <Row>
-                  {requestedWorks.map((request, idx) => (
-                    <Col key={idx} lg={6} className="mb-4">
-                      <Card style={{ 
-                        backgroundColor: 'rgba(40, 40, 40, 0.95)', 
-                        color: 'white',
-                        borderRadius: '12px',
-                        boxShadow: '0 5px 15px rgba(0, 0, 0, 0.4)',
-                        border: '1px solid rgba(255, 193, 7, 0.3)'
+                <div style={{
+                  backgroundColor: colors.white,
+                  borderRadius: '10px',
+                  padding: '20px',
+                  boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
+                  overflowX: 'auto'
+                }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse'
+                  }}>
+                    <thead>
+                      <tr style={{
+                        backgroundColor: colors.primary,
+                        color: colors.dark
                       }}>
-                        <Card.Header style={{ 
-                          backgroundColor: 'rgba(255, 193, 7, 0.1)', 
-                          borderBottom: '1px solid rgba(255, 193, 7, 0.2)',
-                          paddingTop: '15px',
-                          paddingBottom: '15px'
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Request Type</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Details</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Budget/Price</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Timeframe</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Request Date</th>
+                        <th style={{ padding: '12px 15px', textAlign: 'left' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {requestedWorks.map((request, index) => (
+                        <tr key={index} style={{
+                          borderBottom: `1px solid ${colors.secondary}`,
+                          ':hover': {
+                            backgroundColor: colors.light
+                          }
                         }}>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <h5 className="mb-0">
-                              {request.type === 'custom' ? request.projectTitle : `Contractor: ${request.name}`}
-                            </h5>
-                            <Badge bg={
-                              request.status === 'approved' ? 'success' : 
-                              request.status === 'rejected' ? 'danger' : 
-                              'warning'
-                            } style={{ fontSize: '0.8rem', padding: '8px 12px' }}>
+                          <td style={{ padding: '12px 15px' }}>
+                            {request.type === 'custom' ? 'Custom Project' : 'Contractor Request'}
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>
+                            {request.type === 'custom' ? (
+                              <>
+                                <div style={{ fontWeight: '600' }}>{request.projectTitle}</div>
+                                <div style={{ 
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: '200px'
+                                }}>
+                                  {request.description}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{ fontWeight: '600' }}>{request.name}</div>
+                                <div>Cost: ₹{request.cost}/sqft</div>
+                              </>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>
+                            {request.type === 'custom' ? (
+                              `₹${request.budget}`
+                            ) : (
+                              `₹${request.cost}/sqft`
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>
+                            {request.type === 'custom' ? (
+                              `${request.completionPeriod} days`
+                            ) : (
+                              `${request.time} days`
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>
+                            {new Date(request.requestDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                          <td style={{ padding: '12px 15px' }}>
+                            <span style={{
+                              padding: '5px 10px',
+                              borderRadius: '20px',
+                              backgroundColor: getStatusColor(request.status),
+                              color: colors.white,
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              display: 'inline-flex',
+                              alignItems: 'center'
+                            }}>
                               {request.status?.toUpperCase() || 'PENDING'}
-                            </Badge>
-                          </div>
-                        </Card.Header>
-                        <Card.Body>
-                          {request.type === 'custom' ? (
-                            <>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Square Feet:</Col>
-                                <Col md={8}>{request.squareFeet} sq.ft</Col>
-                              </Row>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Budget:</Col>
-                                <Col md={8}>₹{request.budget}</Col>
-                              </Row>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Completion Period:</Col>
-                                <Col md={8}>{request.completionPeriod} days</Col>
-                              </Row>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Description:</Col>
-                                <Col md={8}>{request.description}</Col>
-                              </Row>
-                            </>
-                          ) : (
-                            <>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Contractor:</Col>
-                                <Col md={8}>{request.name}</Col>
-                              </Row>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Cost per sq.ft:</Col>
-                                <Col md={8}>₹{request.cost}</Col>
-                              </Row>
-                              <Row className="mb-3">
-                                <Col md={4} className="text-muted">Completion Time:</Col>
-                                <Col md={8}>{request.time} days</Col>
-                              </Row>
-                            </>
-                          )}
-                          <Row>
-                            <Col md={4} className="text-muted">Requested On:</Col>
-                            <Col md={8}>{new Date(request.requestDate).toLocaleDateString()}</Col>
-                          </Row>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </>
           )}
@@ -618,10 +783,14 @@ const UserDashboard = () => {
         size="lg"
         backdrop="static"
       >
-        <Modal.Header closeButton style={{ backgroundColor: '#343a40', color: 'white', borderBottom: '1px solid #ffc107' }}>
+        <Modal.Header closeButton style={{ 
+          backgroundColor: colors.primary,
+          color: colors.white,
+          borderBottom: `1px solid ${colors.secondary}`
+        }}>
           <Modal.Title>Create Custom Request</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ backgroundColor: '#343a40', color: 'white' }}>
+        <Modal.Body style={{ backgroundColor: colors.background }}>
           <Form onSubmit={handleRequestSubmit}>
             <Form.Group className="mb-3">
               <FloatingLabel controlId="projectTitle" label="Project Title">
@@ -632,7 +801,7 @@ const UserDashboard = () => {
                   value={requestForm.projectTitle}
                   onChange={handleRequestFormChange}
                   required
-                  style={{ backgroundColor: '#212529', color: 'white', borderColor: '#495057' }}
+                  style={{ backgroundColor: colors.white, borderColor: colors.secondary }}
                 />
               </FloatingLabel>
             </Form.Group>
@@ -647,7 +816,7 @@ const UserDashboard = () => {
                     value={requestForm.squareFeet}
                     onChange={handleRequestFormChange}
                     required
-                    style={{ backgroundColor: '#212529', color: 'white', borderColor: '#495057' }}
+                    style={{ backgroundColor: colors.white, borderColor: colors.secondary }}
                   />
                 </FloatingLabel>
               </Col>
@@ -660,7 +829,7 @@ const UserDashboard = () => {
                     value={requestForm.budget}
                     onChange={handleRequestFormChange}
                     required
-                    style={{ backgroundColor: '#212529', color: 'white', borderColor: '#495057' }}
+                    style={{ backgroundColor: colors.white, borderColor: colors.secondary }}
                   />
                 </FloatingLabel>
               </Col>
@@ -673,7 +842,7 @@ const UserDashboard = () => {
                     value={requestForm.completionPeriod}
                     onChange={handleRequestFormChange}
                     required
-                    style={{ backgroundColor: '#212529', color: 'white', borderColor: '#495057' }}
+                    style={{ backgroundColor: colors.white, borderColor: colors.secondary }}
                   />
                 </FloatingLabel>
               </Col>
@@ -688,19 +857,56 @@ const UserDashboard = () => {
                   value={requestForm.description}
                   onChange={handleRequestFormChange}
                   required
-                  style={{ height: '100px', backgroundColor: '#212529', color: 'white', borderColor: '#495057' }}
+                  style={{ height: '100px', backgroundColor: colors.white, borderColor: colors.secondary }}
                 />
               </FloatingLabel>
             </Form.Group>
           </Form>
         </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: '#343a40', borderTop: '1px solid #ffc107' }}>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+        <Modal.Footer style={{ 
+          backgroundColor: colors.background,
+          borderTop: `1px solid ${colors.secondary}`
+        }}>
+          <button 
+            onClick={() => setShowModal(false)}
+            style={{
+              backgroundColor: colors.light,
+              color: colors.text,
+              border: 'none',
+              padding: '8px 15px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#E0D5C8';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = colors.light;
+            }}
+          >
             Cancel
-          </Button>
-          <Button variant="warning" onClick={handleRequestSubmit}>
+          </button>
+          <button 
+            onClick={handleRequestSubmit}
+            style={{
+              backgroundColor: colors.primary,
+              color: colors.white,
+              border: 'none',
+              padding: '8px 15px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#C0A898';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = colors.primary;
+            }}
+          >
             Submit Request
-          </Button>
+          </button>
         </Modal.Footer>
       </Modal>
       
@@ -711,15 +917,19 @@ const UserDashboard = () => {
         centered
         backdrop="static"
       >
-        <Modal.Header closeButton style={{ backgroundColor: '#343a40', color: 'white', borderBottom: '1px solid #ffc107' }}>
+        <Modal.Header closeButton style={{ 
+          backgroundColor: colors.primary,
+          color: colors.white,
+          borderBottom: `1px solid ${colors.secondary}`
+        }}>
           <Modal.Title>Write a Review</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ backgroundColor: '#343a40', color: 'white' }}>
+        <Modal.Body style={{ backgroundColor: colors.background }}>
           {selectedContractor && (
             <Form onSubmit={handleReviewSubmit}>
-              <div className="mb-4 text-center">
-                <h5>{selectedContractor.name}</h5>
-                <div className="mt-3 mb-4">
+              <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                <h5 style={{ color: colors.dark }}>{selectedContractor.name}</h5>
+                <div style={{ margin: '15px 0' }}>
                   <StarRating 
                     rating={reviewForm.rating} 
                     interactive={true} 
@@ -737,34 +947,117 @@ const UserDashboard = () => {
                     value={reviewForm.comment}
                     onChange={handleReviewFormChange}
                     required
-                    style={{ height: '120px', backgroundColor: '#212529', color: 'white', borderColor: '#495057' }}
+                    style={{ height: '120px', backgroundColor: colors.white, borderColor: colors.secondary }}
                   />
                 </FloatingLabel>
               </Form.Group>
             </Form>
           )}
         </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: '#343a40', borderTop: '1px solid #ffc107' }}>
-          <Button variant="secondary" onClick={() => setShowReviewModal(false)}>
+        <Modal.Footer style={{ 
+          backgroundColor: colors.background,
+          borderTop: `1px solid ${colors.secondary}`
+        }}>
+          <button 
+            onClick={() => setShowReviewModal(false)}
+            style={{
+              backgroundColor: colors.light,
+              color: colors.text,
+              border: 'none',
+              padding: '8px 15px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#E0D5C8';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = colors.light;
+            }}
+          >
             Cancel
-          </Button>
-          <Button 
-            variant="warning" 
+          </button>
+          <button 
             onClick={handleReviewSubmit}
             disabled={reviewForm.rating === 0}
+            style={{
+              backgroundColor: reviewForm.rating === 0 ? '#D0B8A8' : colors.primary,
+              color: colors.white,
+              border: 'none',
+              padding: '8px 15px',
+              borderRadius: '6px',
+              cursor: reviewForm.rating === 0 ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              if (reviewForm.rating !== 0) {
+                e.target.style.backgroundColor = '#C0A898';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (reviewForm.rating !== 0) {
+                e.target.style.backgroundColor = colors.primary;
+              }
+            }}
           >
             Submit Review
-          </Button>
+          </button>
         </Modal.Footer>
       </Modal>
+    </div>
+  );
+};
 
-      {/* Custom CSS for hover effects */}
-      <style jsx>{`
-        .contractor-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+// Navigation Item Component
+const NavItem = ({ icon, text, active = false, onClick, colors }) => {
+  return (
+    <div 
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '12px 15px',
+        cursor: 'pointer',
+        backgroundColor: active ? 'rgba(0,0,0,0.05)' : 'transparent',
+        color: active ? colors.dark : colors.text,
+        borderRadius: '6px',
+        marginBottom: '5px',
+        transition: 'all 0.2s ease',
+        fontWeight: active ? '600' : '400'
+      }}
+      onMouseOver={(e) => {
+        if (!active) {
+          e.target.style.backgroundColor = 'rgba(0,0,0,0.05)';
+          e.target.style.color = colors.dark;
         }
-      `}</style>
+      }}
+      onMouseOut={(e) => {
+        if (!active) {
+          e.target.style.backgroundColor = 'transparent';
+          e.target.style.color = colors.text;
+        }
+      }}
+    >
+      <span style={{ 
+        marginRight: '12px', 
+        display: 'flex', 
+        alignItems: 'center',
+        fontSize: '1rem',
+        opacity: active ? 1 : 0.8
+      }}>
+        {icon}
+      </span>
+      <span style={{ fontSize: '0.95rem' }}>{text}</span>
+      {active && (
+        <div style={{ 
+          marginLeft: 'auto',
+          width: '4px',
+          height: '20px',
+          backgroundColor: colors.accent,
+          borderRadius: '2px'
+        }}></div>
+      )}
     </div>
   );
 };
